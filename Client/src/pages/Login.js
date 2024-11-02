@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -15,16 +15,15 @@ function Login() {
         email,
         password,
       });
-      // Save the token to localStorage
       localStorage.setItem('token', response.data.token);
-      navigate('/dashboard'); // Redirect to the dashboard on successful login
+      navigate('/dashboard');
     } catch (err) {
       setError('Invalid email or password');
     }
   };
 
   return (
-    <div className="login-container">
+    <div className="form-container">
       <h2>Login</h2>
       <form onSubmit={handleLogin}>
         <input
@@ -44,8 +43,10 @@ function Login() {
         <button type="submit">Login</button>
         {error && <p className="error">{error}</p>}
       </form>
+      <p>Don't have an account? <Link to="/register">Register here</Link></p>
     </div>
   );
 }
 
 export default Login;
+

@@ -1,98 +1,147 @@
+/* Global Styles */
 body {
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  background-color: #f5f5f5;
+}
+
+h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+p {
+  color: #555;
+  font-size: 14px;
+}
+
+button {
+  cursor: pointer;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
-.login-container {
-  width: 300px;
-  margin: 100px auto;
+/* Common Form Container for Login and Register */
+.form-container {
+  width: 320px;
+  padding: 30px;
+  margin: 20px auto;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   text-align: center;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
 }
 
-.login-container h2 {
-  margin-bottom: 20px;
+.form-container h2 {
+  font-size: 24px;
+  color: #333;
 }
 
-.login-container input {
-  display: block;
+.form-container input {
   width: 100%;
   padding: 10px;
   margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
 }
 
-.login-container button {
+.form-container button {
   width: 100%;
-  padding: 10px;
-  background-color: #007bff;
-  color: white;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: bold;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-.login-container .error {
+.form-container .error {
   color: red;
+  font-size: 14px;
   margin-top: 10px;
 }
 
-.login-container p {
+.form-container .success {
+  color: green;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.form-container p {
   margin-top: 20px;
+  font-size: 14px;
 }
 
-
-
-.register-container {
-  width: 300px;
-  margin: 100px auto;
-  text-align: center;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-}
-
-.register-container h2 {
-  margin-bottom: 20px;
-}
-
-.register-container input {
-  display: block;
-  width: 100%;
-  padding: 10px;
-  margin: 10px 0;
+/* Specific Styles for Login and Register Buttons */
+.login-container button {
+  background-color: #007bff;
+  color: white;
 }
 
 .register-container button {
-  width: 100%;
-  padding: 10px;
   background-color: #28a745;
   color: white;
+}
+
+/* Dashboard Styling */
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 200px;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #333;
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sidebar h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.sidebar button {
+  width: 100%;
+  padding: 10px;
+  margin: 5px 0;
+  background-color: #444;
+  color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
+  text-align: left;
 }
 
-.register-container .error {
-  color: red;
-  margin-top: 10px;
+.sidebar button:hover {
+  background-color: #555;
 }
 
-.register-container .success {
-  color: green;
-  margin-top: 10px;
+.content {
+  margin-left: 200px; /* Offset for the sidebar */
+  padding: 20px;
+  width: calc(100% - 200px);
+  background-color: #f4f4f9;
 }
 
-.register-container p {
-  margin-top: 20px;
+.content > div {
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
