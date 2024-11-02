@@ -34,27 +34,43 @@ Project Structure
 
 Getting Started
 Prerequisites
+
 Node.js and npm installed (ensure node -v and npm -v work in your terminal).
+
 MongoDB: Set up a local instance or MongoDB Atlas for database management.
+
 AWS Account: Configure AWS Cognito, API Gateway, and IAM permissions.
 
+
 Usage Guide
+
 Authentication
+
 Lecturers and admin users can log in via AWS Cognito. Ensure your AWS Cognito configuration in .env matches the project.
+
 API Endpoints
+
 Backend API endpoints are available under /api. Use Axios in React to send requests to these endpoints.
 
 Example Routes:
 
 POST /api/lecturers/add: Add a new lecturer
+
 GET /api/lecturers: Get a list of all lecturers
+
 POST /api/schedule/assign: Assign a subject to a lecturer
+
 Monitoring
 AWS CloudWatch is set up for monitoring. Use CloudWatch logs to track errors, API usage, and system performance.
 
 Contributing
+
 Branch Naming: Follow the naming convention feature/your-feature-name for feature branches.
+
 Pull Requests: Submit a pull request with a detailed description. Each pull request should be reviewed by another team member.
+
 Code Reviews: All code should be reviewed before merging into the main branch.
+
 Issues: Use GitHub Issues for bug tracking, new feature requests, and task assignment.
+
 
