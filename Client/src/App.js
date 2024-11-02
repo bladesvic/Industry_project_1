@@ -1,22 +1,30 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import './App.css';
+import Register from './pages/Register';
 
 function App() {
-  // Check if the user is authenticated by checking if a token is stored
-  const isAuthenticated = !!localStorage.getItem('token');
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+
+  // Monitor changes in localStorage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setIsAuthenticated(!!localStorage.getItem('token'));
+    };
+
+    // Listen for changes to localStorage
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   return (
     <Router>
       <div className="App">
         <Routes>
-          {/* Default route redirects to dashboard if authenticated, otherwise shows login */}
           <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} />
-          {/* Login route */}
           <Route path="/login" element={<Login />} />
-          {/* Dashboard route, redirects to login if not authenticated */}
+          <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
         </Routes>
       </div>

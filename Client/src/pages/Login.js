@@ -11,14 +11,13 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/login`, {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/login`, {
         email,
         password,
       });
-      // Save token or user data to local storage or state
+      // Save the token to localStorage
       localStorage.setItem('token', response.data.token);
-      // Redirect to the dashboard page
-      navigate('/dashboard');
+      navigate('/dashboard'); // Redirect to the dashboard on successful login
     } catch (err) {
       setError('Invalid email or password');
     }
