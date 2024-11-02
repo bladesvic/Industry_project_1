@@ -28,29 +28,9 @@ API Gateway: AWS API Gateway
 Monitoring: AWS CloudWatch
 
 Project Structure
-project-root/
-├── client/                 # React frontend
-│   ├── public/             # Static files
-│   ├── src/                # Source code for the frontend
-│   │   ├── components/     # Reusable React components
-│   │   ├── pages/          # Pages (e.g., Login, Schedule)
-│   │   ├── services/       # Axios services for API requests
-│   │   ├── context/        # Global states (e.g., Auth)
-│   │   ├── App.js          # Main app component
-│   │   └── index.js        # Entry point
-│   ├── .env                # Frontend environment variables
-│   └── package.json        # React dependencies
-├── server/                 # Node.js backend
-│   ├── config/             # Configuration files (e.g., MongoDB, AWS setup)
-│   ├── controllers/        # Request handling logic
-│   ├── models/             # Mongoose schemas
-│   ├── routes/             # API endpoints
-│   ├── middleware/         # Authentication middleware
-│   ├── app.js              # Express app setup
-│   ├── server.js           # Server entry point
-│   ├── .env                # Backend environment variables
-│   └── package.json        # Backend dependencies
-└── README.md               # Project documentation
+
+![image](https://github.com/user-attachments/assets/4921f3f9-8630-4802-b931-b9e64e9ba41f)
+
 
 Getting Started
 Prerequisites
