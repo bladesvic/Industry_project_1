@@ -1,0 +1,66 @@
+# How to open in Visual studio 
+
+#Prerequisites#
+Install Git: Download Git if it’s not already installed.
+Install Node.js and npm: Download Node.js (which includes npm).
+Install MongoDB: Install a local instance or set up a free MongoDB Atlas cluster.
+AWS Account: Ensure you have AWS credentials set up if you need to access AWS services like Cognito.
+
+Step 1: Clone the Repository
+Open a terminal (or Git Bash) and navigate to the directory where you want to store the project.
+Run the following command to clone the project repository
+
+git clone https://github.com/yourusername/lecturer-scheduling-system.git
+
+
+cd lecturer-scheduling-system
+
+
+Step 2: Install Project Dependencies
+
+Frontend Setup (React)
+Navigate to the client directory:
+cd client
+npm install
+Create a .env file in the client directory to store environment variables:
+REACT_APP_API_URL=http://localhost:5000
+
+
+Backend Setup (Node.js & Express)
+Navigate to the server directory:
+cd ../server
+npm install
+
+
+Create a .env file in the server directory with the following environment variables:
+
+MONGO_URI=your_mongodb_connection_string
+AWS_REGION=your_aws_region
+AWS_USER_POOL_ID=your_cognito_user_pool_id
+AWS_APP_CLIENT_ID=your_cognito_app_client_id
+
+Replace your_mongodb_connection_string with the connection string for your MongoDB instance.
+Replace AWS values with those provided by the team or from your AWS account.
+
+
+Step 3: Start the Application
+Start the Backend Server
+In the terminal, navigate to the server directory if you're not already there.
+cd server
+Start the Node.js server:
+node server.js
+You should see a message confirming the server is running, like:
+cd client
+Start the React development server:
+npm start
+The app should automatically open in your default browser. If not, go to http://localhost:3000.
+
+
+Step 4: Verify the Setup
+Login: Try logging in to check that AWS Cognito authentication is working.
+View Schedules: After logging in, view the lecturer schedule page to verify data is being fetched from the backend.
+CRUD Operations: Test adding, editing, and deleting lecturer data to confirm MongoDB operations are working.
+Troubleshooting
+If you encounter issues connecting to MongoDB, ensure your connection string in .env is correct.
+AWS errors might indicate incorrect credentials or configurations; double-check the .env settings for AWS.
+If the React app doesn’t load, ensure both the frontend (http://localhost:3000) and backend (http://localhost:5000) servers are running.
