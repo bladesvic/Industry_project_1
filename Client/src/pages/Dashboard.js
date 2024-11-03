@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ManageStaff from '../components/ManageStaff';
 import SchedulingRules from '../components/SchedulingRules';
-import UserManagement from '../components/UserManagement'; // Import the new component
+import UserManagement from '../components/UserManagement';
+import CalendarView from '../components/CalendarView';
+import CourseForm from '../components/CourseForm'; // Import CourseForm
 
 const userRole = 'Administrator'; // Mock role; replace with actual role from authentication
 
@@ -15,6 +17,11 @@ function Dashboard() {
     navigate('/login');
   };
 
+  const handleCourseCreated = (newCourse) => {
+    // Refresh calendar or handle any necessary updates after course creation
+    console.log("Course created:", newCourse);
+  };
+
   const renderComponent = () => {
     switch (activeComponent) {
       case 'Manage Staff':
@@ -22,7 +29,11 @@ function Dashboard() {
       case 'Scheduling Rules':
         return <SchedulingRules />;
       case 'User Management':
-        return <UserManagement />; // Add the UserManagement component here
+        return <UserManagement />;
+      case 'Calendar':
+        return <CalendarView />;
+      case 'Create Course': // Add case for Create Course
+        return <CourseForm onCourseCreated={handleCourseCreated} />;
       default:
         return <Welcome />;
     }
@@ -38,7 +49,8 @@ function Dashboard() {
               <button onClick={() => setActiveComponent('Manage Staff')}>Manage Staff</button>
               <button onClick={() => setActiveComponent('Scheduling Rules')}>Scheduling Rules</button>
               <button onClick={() => setActiveComponent('User Management')}>User Management</button>
-              <button onClick={() => setActiveComponent('User Access')}>User Access Levels</button>
+              <button onClick={() => setActiveComponent('Calendar')}>Calendar</button>
+              <button onClick={() => setActiveComponent('Create Course')}>Create Course</button> {/* Add Create Course button */}
             </>
           )}
         </nav>
