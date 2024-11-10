@@ -1,24 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ManageStaff from '../components/ManageStaff';
 import SchedulingRules from '../components/SchedulingRules';
 import UserManagement from '../components/UserManagement';
 import CalendarView from '../components/CalendarView';
-import CourseForm from '../components/CourseForm'; // Import CourseForm
+import CourseForm from '../components/CourseForm'; 
+import UserControl from '../components/UserControl'; // Import UserControl component
 
 const userRole = 'Administrator'; // Mock role; replace with actual role from authentication
 
 function Dashboard() {
   const navigate = useNavigate();
   const [activeComponent, setActiveComponent] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+
+  useEffect(() => {
+    // Check if the user is authenticated when the component mounts
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    navigate('/login');
+    setIsAuthenticated(false); // Update state to trigger redirect
   };
 
   const handleCourseCreated = (newCourse) => {
-    // Refresh calendar or handle any necessary updates after course creation
     console.log("Course created:", newCourse);
   };
 
@@ -32,8 +40,10 @@ function Dashboard() {
         return <UserManagement />;
       case 'Calendar':
         return <CalendarView />;
-      case 'Create Course': // Add case for Create Course
+      case 'Create Course':
         return <CourseForm onCourseCreated={handleCourseCreated} />;
+      case 'User Control':
+        return <UserControl />;
       default:
         return <Welcome />;
     }
@@ -50,7 +60,8 @@ function Dashboard() {
               <button onClick={() => setActiveComponent('Scheduling Rules')}>Scheduling Rules</button>
               <button onClick={() => setActiveComponent('User Management')}>User Management</button>
               <button onClick={() => setActiveComponent('Calendar')}>Calendar</button>
-              <button onClick={() => setActiveComponent('Create Course')}>Create Course</button> {/* Add Create Course button */}
+              <button onClick={() => setActiveComponent('Create Course')}>Create Course</button>
+              <button onClick={() => setActiveComponent('User Control')}>User Control</button>
             </>
           )}
         </nav>
@@ -66,3 +77,4 @@ function Dashboard() {
 const Welcome = () => <div>Welcome to your dashboard!</div>;
 
 export default Dashboard;
+

@@ -16,7 +16,7 @@ const verifyToken = (req, res, next) => {
 
 const isAdmin = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.userId); // Ensure you're using `userId` here
     if (user && user.role === 'admin') {
       next();
     } else {
