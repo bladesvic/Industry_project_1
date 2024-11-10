@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../App';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -15,8 +17,10 @@ function Login() {
         email,
         password,
       });
+      // Save the token to localStorage
       localStorage.setItem('token', response.data.token);
-      navigate('/dashboard');
+      login(); // Update the auth state
+      navigate('/dashboard'); // Redirect to the dashboard
     } catch (err) {
       setError('Invalid email or password');
     }
@@ -49,4 +53,3 @@ function Login() {
 }
 
 export default Login;
-

@@ -10,11 +10,14 @@ function UserManagement() {
     const fetchUsers = async () => {
       try {
         const token = localStorage.getItem('token');
+        console.log("Fetching users with token:", token); // Debugging log
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/users`, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        console.log("Users fetched:", response.data); // Debugging log
         setUsers(response.data);
       } catch (err) {
+        console.error("Error fetching users:", err); // Debugging log
         setError('Could not fetch users. Please try again later.');
       }
     };
@@ -24,14 +27,17 @@ function UserManagement() {
   const promoteToAdmin = async (userId) => {
     try {
       const token = localStorage.getItem('token');
+      console.log(`Promoting user ${userId} to admin with token:`, token); // Debugging log
       const response = await axios.put(`${process.env.REACT_APP_API_URL}/api/auth/promote/${userId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log("Promotion response:", response.data); // Debugging log
       setSuccess(response.data.message);
       setUsers(users.map(user => 
         user._id === userId ? { ...user, role: 'admin' } : user
       ));
     } catch (err) {
+      console.error("Error promoting user:", err); // Debugging log
       setError(err.response?.data?.error || 'Could not promote user to admin.');
     }
   };

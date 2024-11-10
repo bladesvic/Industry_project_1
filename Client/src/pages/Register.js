@@ -21,11 +21,13 @@ function Register() {
       // Save the token to localStorage
       localStorage.setItem('token', response.data.token);
       setSuccess("Registration successful! Redirecting to dashboard...");
+      setError('');
       setTimeout(() => {
         navigate('/dashboard'); // Redirect to the dashboard after registration
       }, 2000);
     } catch (err) {
-      setError('Error: Could not register');
+      console.error("Registration error:", err.response || err); // Log detailed error information
+      setError(err.response?.data?.error || 'Error: Could not register');
       setSuccess('');
     }
   };

@@ -1,12 +1,13 @@
 /* Global Styles */
 body {
   font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
+  margin: 0;
+  padding: 0;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: start;
   min-height: 100vh;
-  margin: 0;
-  background-color: #f5f5f5;
 }
 
 h2 {
@@ -28,7 +29,7 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
-/* Common Form Container for Login and Register */
+/* Form Container for Login and Register */
 .form-container {
   width: 320px;
   padding: 30px;
@@ -39,28 +40,12 @@ code {
   text-align: center;
 }
 
-.form-container h2 {
-  font-size: 24px;
-  color: #333;
-}
-
-.form-container input {
-  width: 100%;
-  padding: 10px;
-  margin: 10px 0;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
+.form-container input,
 .form-container button {
   width: 100%;
-  padding: 12px;
-  font-size: 16px;
-  font-weight: bold;
-  border: none;
+  margin-top: 10px;
+  padding: 10px;
   border-radius: 4px;
-  cursor: pointer;
 }
 
 .form-container .error {
@@ -75,28 +60,7 @@ code {
   margin-top: 10px;
 }
 
-.form-container p {
-  margin-top: 20px;
-  font-size: 14px;
-}
-
-/* Specific Styles for Login and Register Buttons */
-.login-container button {
-  background-color: #007bff;
-  color: white;
-}
-
-.register-container button {
-  background-color: #28a745;
-  color: white;
-}
-
-/* Dashboard Styling */
-.dashboard-layout {
-  display: flex;
-  min-height: 100vh;
-}
-
+/* Sidebar Styling */
 .sidebar {
   width: 200px;
   height: 100vh;
@@ -109,11 +73,6 @@ code {
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-.sidebar h2 {
-  font-size: 24px;
-  margin-bottom: 20px;
 }
 
 .sidebar button {
@@ -133,19 +92,102 @@ code {
 }
 
 .content {
-  margin-left: 200px; /* Offset for the sidebar */
+  margin-left: 220px; /* Adjust offset for sidebar */
   padding: 20px;
-  width: calc(100% - 200px);
+  width: calc(100% - 220px);
   background-color: #f4f4f9;
 }
 
-.content > div {
+/* Course Management Container */
+.course-management-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
   padding: 20px;
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
+/* Left Section: Course Form */
+.course-form {
+  flex: 1;
+  min-width: 280px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.course-form h3 {
+  margin-bottom: 15px;
+}
+
+.course-form input,
+.course-form textarea,
+.course-form button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.course-form button {
+  background-color: #007bff;
+  color: white;
+  margin-top: 15px;
+}
+
+.course-form button:hover {
+  background-color: #0056b3;
+}
+
+/* Right Section: Calendar and Table Container */
+.calendar-and-table {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Calendar Styling */
+.calendar-section {
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.fullcalendar {
+  width: 100%;
+}
+
+/* Table Styling */
+.table-section {
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow-x: auto; /* Enable horizontal scrolling for smaller screens */
+}
+
+.table-section table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.table-section th,
+.table-section td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.table-section th {
+  background-color: #f5f5f5;
+  font-weight: bold;
+}
+
+/* Success and Error Messages */
 .success {
   color: green;
   font-size: 14px;
@@ -158,21 +200,88 @@ code {
   margin-bottom: 10px;
 }
 
-
-/* Calendar */
-.calendar-view h2 {
-  margin-top: 0;
+.button-delete {
+  color: white;
+  background-color: #d9534f;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
 }
 
-.fullcalendar {
-  width: 100%;
-  height: calc(100vh - 150px);
+.button-delete:hover {
+  background-color: #c9302c;
 }
 
-.calendar-container {
+
+/* Container for the whole section */
+.course-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Top row: Course Form and Calendar */
+.top-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
   width: 100%;
-  height: 100%;
-  max-width: 900px; /* Optional: limit max width */
+}
+
+/* Left section: Course form */
+.course-form {
+  flex: 1;
   padding: 20px;
-  box-sizing: border-box;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-width: 280px;
+}
+
+/* Right section: Calendar */
+.calendar-section {
+  flex: 1;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-width: 280px;
+}
+
+/* Bottom row: Full-width Courses Table */
+.table-section {
+  width: 100%;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+/* Table Styling */
+.table-section table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.table-section th, .table-section td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Delete Button Styling */
+.button-delete {
+  color: white;
+  background-color: #d9534f;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.button-delete:hover {
+  background-color: #c9302c;
 }

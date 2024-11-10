@@ -1,9 +1,16 @@
-router.post('/create', verifyToken, isAdmin, async (req, res) => {
-  try {
-    console.log('Request received for course creation:', req.body); // Log the request body
-    const { title, description, startDate, endDate, startTime, endTime, location } = req.body;
+const express = require('express');
+const router = express.Router();
+const Course = require('../models/Course');
+const { verifyToken } = require('../middleware/authMiddleware'); // Import from authMiddleware
 
-    const newCourse = new Course({
+// Route to create a course
+router.post('/create', verifyToken, async (req, res) => {
+  const { title, description, startDate, endDate, startTime, endTime, location, assignedUser } = req.body;
+
+  try {
+    console.log("Course data received:", { title, description, startDate, endDate, startTime, endTime, location, assignedUser });
+
+    const course = new Course({
       title,
       description,
       startDate,
@@ -11,13 +18,47 @@ router.post('/create', verifyToken, isAdmin, async (req, res) => {
       startTime,
       endTime,
       location,
+      assignedUser: assignedUser || null // Assign null if no user is provided
     });
 
-    await newCourse.save();
-    res.json({ message: 'Course created successfully', course: newCourse });
-  } catch (error) {
-    console.error('Error creating course:', error); // Log the error in the backend console
-    res.status(500).json({ error: 'Error creating course' });
+    await course.save();
+    console.log("Course successfully saved:", course);
+
+    res.status(201).json({ message: 'Course created successfully', course });
+  } catch (err) {
+    console.error('Error creating course:', err);
+    res.status(500).json({ error: 'Failed to create course' });
   }
 });
 
+// Route to fetch all courses
+router.get('/all', verifyToken, async (req, res) => {
+  try {
+    // Fetch all courses and populate the assignedUser field
+    const courses = await Course.find().populate('assignedUser', 'name');
+    res.status(200).json(courses);
+  } catch (err) {
+    console.error('Error fetching courses:', err);
+    res.status(500).json({ error: 'Failed to fetch courses' });
+  }
+});
+
+// Route to delete a course by ID
+router.delete('/delete/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedCourse = await Course.findByIdAndDelete(id);
+
+    if (!deletedCourse) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    res.status(200).json({ message: 'Course deleted successfully', course: deletedCourse });
+  } catch (err) {
+    console.error('Error deleting course:', err);
+    res.status(500).json({ error: 'Failed to delete course' });
+  }
+});
+
+
+module.exports = router;
