@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
+import Papa from 'papaparse'; // Import papaparse
 
 function CourseForm({ onCourseCreated }) {
   const [title, setTitle] = useState('');
@@ -68,6 +69,48 @@ function CourseForm({ onCourseCreated }) {
     }
   };
 
+  const handleCSVUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        const parsedData = results.data;
+        const token = localStorage.getItem('token');
+
+        try {
+          for (const course of parsedData) {
+            await axios.post(
+              `${process.env.REACT_APP_API_URL}/api/courses/create`,
+              {
+                title: course.title,
+                description: course.description,
+                startDate: course.startDate,
+                endDate: course.endDate,
+                startTime: course.startTime,
+                endTime: course.endTime,
+                location: course.location,
+                assignedUser: course.assignedUser || null,
+              },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+          }
+          setSuccess('Courses imported successfully!');
+          fetchCourses();
+        } catch (err) {
+          console.error('Error importing courses:', err);
+          setError('Failed to import courses');
+        }
+      },
+      error: (err) => {
+        console.error('CSV parsing error:', err);
+        setError('Error parsing CSV file');
+      },
+    });
+  };
+
   const handleDeleteCourse = async (courseId) => {
     try {
       const token = localStorage.getItem('token');
@@ -95,7 +138,6 @@ function CourseForm({ onCourseCreated }) {
 
   return (
     <div className="course-container">
-      {/* Top Row: Course Form and Calendar */}
       <div className="top-row">
         {/* Course Creation Form */}
         <div className="course-form">
@@ -114,8 +156,12 @@ function CourseForm({ onCourseCreated }) {
             <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Location" />
             <button type="submit">Create Course</button>
           </form>
+          <div className="csv-upload">
+            <label htmlFor="csvUpload">Upload CSV:</label>
+            <input type="file" id="csvUpload" accept=".csv" onChange={handleCSVUpload} />
+          </div>
         </div>
-  
+
         {/* Calendar View */}
         <div className="calendar-section">
           <FullCalendar
@@ -130,7 +176,7 @@ function CourseForm({ onCourseCreated }) {
           />
         </div>
       </div>
-  
+
       {/* Bottom Row: Existing Courses Table */}
       <div className="table-section">
         <h3>Existing Courses</h3>
@@ -167,7 +213,6 @@ function CourseForm({ onCourseCreated }) {
       </div>
     </div>
   );
-  
 }
 
 export default CourseForm;

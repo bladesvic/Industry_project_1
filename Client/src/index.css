@@ -429,3 +429,60 @@ code {
 }
 
 /* ------------------------------------------------------------------------------------------------------ */
+/* -------------------------Calendar View seperator --------------------------------------- */
+/* Styles for the right-side event details */
+/* Wrapper around the calendar and sidebar */
+.calendar-wrapper {
+  display: flex;
+  height: 100%;
+  width: 80%;
+}
+
+/* Calendar container with responsive width adjustment */
+
+
+.calendar-container.sidebar-open {
+  margin-right: 320px; /* Increased space to accommodate the sidebar */
+}
+
+/* Sidebar styling */
+.event-details {
+  position: fixed;
+  right: 01px; /* Adds space from the right edge of the screen */
+  top: 0;
+  height: 100%;
+  width: 30%;
+  background-color: #f0f0f0; /* Light background color for visibility */
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  overflow-y: auto;
+  z-index: 1000;
+  border-left: 4px solid #007bff; /* Optional: colored border for distinction */
+}
+
+/* Event title in the sidebar */
+.event-details h3 {
+  color: #007bff; /* Title color */
+  margin-top: 0; /* Removes extra top margin */
+}
+
+/* Paragraph styling in the sidebar */
+.event-details p {
+  margin: 10px 0;
+}
+
+/* Button styling in the sidebar */
+.event-details button {
+  display: block;
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.event-details button:hover {
+  background-color: #0056b3;
+}
