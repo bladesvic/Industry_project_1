@@ -38,7 +38,7 @@ function CourseForm({ onCourseCreated }) {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/users`, {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/lecturers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(response.data);
@@ -109,6 +109,22 @@ function CourseForm({ onCourseCreated }) {
         setError('Error parsing CSV file');
       },
     });
+  };
+
+  const handleAssignUser = async (courseId, userId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/courses/update/${courseId}`,
+        { assignedUser: userId },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setSuccess(response.data.message);
+      fetchCourses();
+    } catch (err) {
+      console.error('Error assigning user:', err);
+      setError('Failed to assign user');
+    }
   };
 
   const handleDeleteCourse = async (courseId) => {
@@ -188,7 +204,7 @@ function CourseForm({ onCourseCreated }) {
               <th>Start Date</th>
               <th>End Date</th>
               <th>Location</th>
-              <th>Assigned User</th>
+              <th>Assigned Lecturer</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -200,7 +216,19 @@ function CourseForm({ onCourseCreated }) {
                 <td>{course.startDate}</td>
                 <td>{course.endDate}</td>
                 <td>{course.location}</td>
-                <td>{course.assignedUser ? course.assignedUser.name : 'No user'}</td>
+                <td>
+                  <select
+                    value={course.assignedUser ? course.assignedUser._id : ''}
+                    onChange={(e) => handleAssignUser(course._id, e.target.value)}
+                  >
+                    <option value="">Unassigned</option>
+                    {users.map((user) => (
+                      <option key={user._id} value={user._id}>
+                        {user.name}
+                      </option>
+                    ))}
+                  </select>
+                </td>
                 <td>
                   <button className="button-delete" onClick={() => handleDeleteCourse(course._id)}>
                     Delete

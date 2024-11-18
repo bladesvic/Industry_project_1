@@ -1,4 +1,3 @@
-// UserControl.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
@@ -8,6 +7,7 @@ function UserControl() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('user');
+  const [teachingAbility, setTeachingAbility] = useState(5);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -31,15 +31,13 @@ function UserControl() {
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
-    console.log("Sending data:", { name, email, password, role });
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/auth/create`,
-        { name, email, password, role },
+        { name, email, password, role, teachingAbility: role === 'lecturer' ? teachingAbility : null },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log("Response data:", response.data);
       setSuccess(response.data.message);
       setError('');
       fetchUsers();
@@ -49,24 +47,21 @@ function UserControl() {
       setError('Failed to create user');
     }
   };
-  
 
-  const handleUpdateRole = async (id, newRole) => {
+  const handleUpdateUser = async (id, updatedData) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.put(`${process.env.REACT_APP_API_URL}/api/auth/update/${id}`, 
-        { role: newRole },
+      const response = await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/auth/update/${id}`,
+        updatedData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setSuccess(response.data.message);
       setError('');
       fetchUsers();
-      clearMessageAfterDelay();
     } catch (err) {
-      console.error('Error updating role:', err);
-      setError('Failed to update role');
-      setSuccess('');
-      clearMessageAfterDelay();
+      console.error('Error updating user:', err);
+      setError('Failed to update user');
     }
   };
 
@@ -80,12 +75,9 @@ function UserControl() {
       setSuccess('User deleted successfully');
       setError('');
       fetchUsers();
-      clearMessageAfterDelay();
     } catch (err) {
       console.error('Error deleting user:', err);
       setError('Failed to delete user');
-      setSuccess('');
-      clearMessageAfterDelay();
     }
   };
 
@@ -94,13 +86,7 @@ function UserControl() {
     setEmail('');
     setPassword('');
     setRole('user');
-  };
-
-  const clearMessageAfterDelay = () => {
-    setTimeout(() => {
-      setSuccess('');
-      setError('');
-    }, 3000);
+    setTeachingAbility(5);
   };
 
   return (
@@ -114,11 +100,37 @@ function UserControl() {
         <form onSubmit={handleCreateUser}>
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" required />
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
-          <select value={role} onChange={(e) => setRole(e.target.value)}>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            required
+          />
+          <select
+            value={role}
+            onChange={(e) => {
+              setRole(e.target.value);
+              if (e.target.value !== 'lecturer') {
+                setTeachingAbility(null);
+              }
+            }}
+          >
             <option value="user">User</option>
             <option value="admin">Admin</option>
+            <option value="lecturer">Lecturer</option>
           </select>
+          {role === 'lecturer' && (
+            <input
+              type="number"
+              value={teachingAbility}
+              onChange={(e) => setTeachingAbility(Number(e.target.value))}
+              placeholder="Teaching Ability (1-10)"
+              min="1"
+              max="10"
+              required
+            />
+          )}
           <button type="submit">Create User</button>
         </form>
       </div>
@@ -131,23 +143,53 @@ function UserControl() {
               <th>Name</th>
               <th>Email</th>
               <th>Role</th>
+              <th>Teaching Ability</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {users.map((user) => (
               <tr key={user._id}>
-                <td>{user.name}</td>
-                <td>{user.email}</td>
-                <td>{user.role}</td>
+                <td>
+                  <input
+                    type="text"
+                    defaultValue={user.name}
+                    onBlur={(e) => handleUpdateUser(user._id, { name: e.target.value })}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="email"
+                    defaultValue={user.email}
+                    onBlur={(e) => handleUpdateUser(user._id, { email: e.target.value })}
+                  />
+                </td>
                 <td>
                   <select
-                    value={user.role}
-                    onChange={(e) => handleUpdateRole(user._id, e.target.value)}
+                    defaultValue={user.role}
+                    onChange={(e) =>
+                      handleUpdateUser(user._id, { role: e.target.value, teachingAbility: user.teachingAbility })
+                    }
                   >
                     <option value="user">User</option>
                     <option value="admin">Admin</option>
+                    <option value="lecturer">Lecturer</option>
                   </select>
+                </td>
+                <td>
+                  {user.role === 'lecturer' && (
+                    <input
+                      type="number"
+                      defaultValue={user.teachingAbility || 5}
+                      min="1"
+                      max="10"
+                      onBlur={(e) =>
+                        handleUpdateUser(user._id, { teachingAbility: Number(e.target.value) })
+                      }
+                    />
+                  )}
+                </td>
+                <td>
                   <button onClick={() => handleDeleteUser(user._id)}>Delete</button>
                 </td>
               </tr>
@@ -160,3 +202,4 @@ function UserControl() {
 }
 
 export default UserControl;
+

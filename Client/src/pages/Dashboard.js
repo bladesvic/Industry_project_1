@@ -4,8 +4,9 @@ import ManageStaff from '../components/ManageStaff';
 import SchedulingRules from '../components/SchedulingRules';
 import UserManagement from '../components/UserManagement';
 import CalendarView from '../components/CalendarView';
-import CourseForm from '../components/CourseForm'; 
-import UserControl from '../components/UserControl'; // Import UserControl component
+import CourseForm from '../components/CourseForm';
+import UserControl from '../components/UserControl';
+import MySchedule from '../components/MySchedule'; // Import MySchedule component
 
 const userRole = 'Administrator'; // Mock role; replace with actual role from authentication
 
@@ -44,6 +45,8 @@ function Dashboard() {
         return <CourseForm onCourseCreated={handleCourseCreated} />;
       case 'User Control':
         return <UserControl />;
+      case 'My Schedule': // Add MySchedule case
+        return <MySchedule />;
       default:
         return <Welcome />;
     }
@@ -62,14 +65,13 @@ function Dashboard() {
               <button onClick={() => setActiveComponent('Calendar')}>Calendar</button>
               <button onClick={() => setActiveComponent('Create Course')}>Create Course</button>
               <button onClick={() => setActiveComponent('User Control')}>User Control</button>
+              <button onClick={() => setActiveComponent('My Schedule')}>My Schedule</button> {/* New button */}
             </>
           )}
         </nav>
         <button onClick={handleLogout}>Logout</button>
       </aside>
-      <main className="content">
-        {renderComponent()}
-      </main>
+      <main className="content">{renderComponent()}</main>
     </div>
   );
 }
@@ -77,4 +79,3 @@ function Dashboard() {
 const Welcome = () => <div>Welcome to your dashboard!</div>;
 
 export default Dashboard;
-

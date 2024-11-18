@@ -1,10 +1,9 @@
-// authRoutes.js
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User'); // Assuming User is your Mongoose model
-const { verifyToken, isAdmin } = require('../middleware/authMiddleware');
+const User = require('../models/User');
+const { verifyToken, hasRole } = require('../middleware/authMiddleware'); // Updated import
 
 // Login route
 router.post('/login', async (req, res) => {
@@ -40,7 +39,8 @@ router.post('/login', async (req, res) => {
 
 // Registration route
 router.post('/register', async (req, res) => {
-  const { email, password, name } = req.body;
+  const { email, password, name, role, teachingAbility } = req.body;
+
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -50,7 +50,14 @@ router.post('/register', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    const user = new User({ email, passwordHash, name, role: 'user' });
+    const user = new User({
+      email,
+      passwordHash,
+      name,
+      role: role || 'user', // Default to 'user' if no role is specified
+      teachingAbility: role === 'lecturer' ? teachingAbility || 5 : null,
+    });
+
     await user.save();
 
     const token = jwt.sign(
@@ -67,7 +74,7 @@ router.post('/register', async (req, res) => {
 });
 
 // Get all users (Admin-only route)
-router.get('/users', verifyToken, isAdmin, async (req, res) => {
+router.get('/users', verifyToken, hasRole(['admin']), async (req, res) => {
   try {
     const users = await User.find();
     res.json(users);
@@ -78,33 +85,28 @@ router.get('/users', verifyToken, isAdmin, async (req, res) => {
 });
 
 // Create a new user (Admin-only route)
-router.post('/create', verifyToken, isAdmin, async (req, res) => {
-  const { name, email, password, role } = req.body;
-  
+router.post('/create', verifyToken, hasRole(['admin']), async (req, res) => {
+  const { name, email, password, role, teachingAbility } = req.body;
+
   try {
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      console.log(`User with email ${email} already exists.`);
       return res.status(400).json({ error: 'User already exists' });
     }
 
-    // Hash the password
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Create the new user object
     const newUser = new User({
       name,
       email,
       passwordHash,
       role,
+      teachingAbility: role === 'lecturer' ? teachingAbility || 5 : null,
     });
 
-    // Save the user in the database
     await newUser.save();
 
-    console.log(`User ${name} created successfully`);
     res.status(201).json({
       message: 'User created successfully',
       user: {
@@ -112,31 +114,39 @@ router.post('/create', verifyToken, isAdmin, async (req, res) => {
         name: newUser.name,
         email: newUser.email,
         role: newUser.role,
+        teachingAbility: newUser.teachingAbility,
       },
     });
   } catch (err) {
-    console.error('Error creating user:', err.message || err);
+    console.error('Error creating user:', err);
     res.status(500).json({ error: 'Failed to create user' });
   }
 });
 
 // Update a user's role (Admin-only route)
-router.put('/update/:id', verifyToken, isAdmin, async (req, res) => {
-  const { role } = req.body;
+router.put('/update/:id', verifyToken, hasRole(['admin']), async (req, res) => {
+  const { role, teachingAbility } = req.body;
+
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, { role }, { new: true });
+    const updateData = { role };
+    if (role === 'lecturer') {
+      updateData.teachingAbility = teachingAbility || 5;
+    }
+
+    const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    res.json({ message: 'User role updated successfully', user });
+
+    res.json({ message: 'User updated successfully', user });
   } catch (err) {
-    console.error('Error updating role:', err);
-    res.status(500).json({ error: 'Failed to update role' });
+    console.error('Error updating user:', err);
+    res.status(500).json({ error: 'Failed to update user' });
   }
 });
 
 // Delete a user (Admin-only route)
-router.delete('/delete/:id', verifyToken, isAdmin, async (req, res) => {
+router.delete('/delete/:id', verifyToken, hasRole(['admin']), async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) {
@@ -146,6 +156,17 @@ router.delete('/delete/:id', verifyToken, isAdmin, async (req, res) => {
   } catch (err) {
     console.error('Error deleting user:', err);
     res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
+// Fetch all lecturers
+router.get('/lecturers', verifyToken, async (req, res) => {
+  try {
+    const lecturers = await User.find({ role: 'lecturer' }).select('name email teachingAbility');
+    res.json(lecturers);
+  } catch (err) {
+    console.error('Error fetching lecturers:', err);
+    res.status(500).json({ error: 'Failed to fetch lecturers' });
   }
 });
 
