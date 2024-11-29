@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, createContext, useContext, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -7,7 +7,7 @@ import Register from './pages/Register';
 // Create a Context for Authentication State
 const AuthContext = createContext();
 
-// Create a custom hook to use the AuthContext
+// Custom hook to use AuthContext
 export function useAuth() {
   return useContext(AuthContext);
 }
@@ -15,23 +15,40 @@ export function useAuth() {
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
 
-  // Function to handle login, updating the auth state
-  const login = () => setIsAuthenticated(true);
+  useEffect(() => {
+    // Check for token on app load
+    const token = localStorage.getItem('token');
+    setIsAuthenticated(!!token); // Update auth state
+  }, []);
 
-  // Function to handle logout, updating the auth state
+  const login = () => {
+    setIsAuthenticated(true);
+  };
+
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('token'); // Clear token
     setIsAuthenticated(false);
+    window.location.href = '/login'; // Redirect to login immediately
   };
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
       <Router>
         <Routes>
-          <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} />
+          {/* Redirect to dashboard if authenticated, else to login */}
+          <Route path="/" element={<Navigate to={isAuthenticated ? '/dashboard' : '/login'} />} />
+
+          {/* Login Route */}
           <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} />
+
+          {/* Register Route */}
           <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Register />} />
-          <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
+
+          {/* Protected Dashboard Route */}
+          <Route
+            path="/dashboard"
+            element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
+          />
         </Routes>
       </Router>
     </AuthContext.Provider>

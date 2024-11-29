@@ -36,3 +36,10 @@
     transform: rotate(360deg);
   }
 }
+
+
+.logged-in-user {
+  margin-top: auto; /* Push this section to the bottom */
+  font-size: 14px;
+  color: #555;
+}

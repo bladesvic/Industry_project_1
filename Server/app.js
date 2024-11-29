@@ -20,9 +20,15 @@ mongoose.connect(process.env.MONGO_URI, {
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Import Routes
+// Import Routes (ensure no duplicate declarations)
 const authRoutes = require('./routes/authRoutes');
+const courseRoutes = require('./routes/courseRoutes');
+const lecturerRoutes = require('./routes/lecturerRoutes');
+
+// Use Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/courses', courseRoutes);
+app.use('/api/lecturers', lecturerRoutes);
 
 // Sample Route
 app.get('/', (req, res) => {
@@ -32,8 +38,3 @@ app.get('/', (req, res) => {
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-
-// Coursee route 
-const courseRoutes = require('./routes/courseRoutes');
-app.use('/api/courses', courseRoutes);

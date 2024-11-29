@@ -71,8 +71,16 @@ code {
   color: white;
   padding: 20px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: column; /* Align children vertically */
+  justify-content: space-between; /* Space between nav and bottom section */
+}
+
+.sidebar h2 {
+  margin-bottom: 20px;
+}
+
+.sidebar nav {
+  flex-grow: 1; /* Push this section to take available vertical space */
 }
 
 .sidebar button {
@@ -91,6 +99,15 @@ code {
   background-color: #555;
 }
 
+.logged-in-user {
+  position: absolute; /* Absolute positioning */
+  bottom: 10%; /* Place it 20% from the bottom */
+  font-size: 14px;
+  color: #f8e6e6;
+  text-align: left; /* Center-align the text */
+}
+
+/* Content Styling */
 .content {
   margin-left: 220px; /* Adjust offset for sidebar */
   padding: 20px;
@@ -486,3 +503,87 @@ code {
 .event-details button:hover {
   background-color: #0056b3;
 }
+
+/* #############################THe Lecturer page #######################3 */
+
+/* Assign Lecturers Page Styles */
+.assign-lecturers-container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.feedback-message {
+  margin-bottom: 10px;
+  color: green;
+  font-weight: bold;
+}
+
+/* Modern Table Styling */
+.modern-table-container {
+  overflow-x: auto;
+}
+
+.modern-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 16px;
+  text-align: left;
+}
+
+.modern-table th,
+.modern-table td {
+  padding: 12px 15px;
+}
+
+.modern-table thead th {
+  background-color: #4caf50;
+  color: white;
+  text-align: left;
+}
+
+.modern-table tbody tr {
+  border-bottom: 1px solid #dddddd;
+}
+
+.modern-table tbody tr:nth-of-type(even) {
+  background-color: #f9f9f9;
+}
+
+.modern-table tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+/* Buttons */
+.assign-button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.assign-button:hover {
+  background-color: #45a049;
+}
+
+/* Dropdown Styling */
+.lecturer-dropdown {
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.lecturer-dropdown:focus {
+  outline: none;
+  border-color: #4caf50;
+}
+
+
+
+/* #############################THe Lecturer page #######################3 */

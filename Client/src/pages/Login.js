@@ -1,28 +1,52 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../App';
+import { useAuth } from '../App'; // Import AuthContext
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login } = useAuth(); // Use login function from AuthContext
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true); // Start loading
+
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/login`, {
-        email,
-        password,
-      });
-      // Save the token to localStorage
+      // Make API request to login
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/login`,
+        { email, password }
+      );
+
+      // Validate token in response
+      if (!response.data.token) {
+        throw new Error('Login failed. Token not received.');
+      }
+
+      // Save token to localStorage
       localStorage.setItem('token', response.data.token);
-      login(); // Update the auth state
-      navigate('/dashboard'); // Redirect to the dashboard
+
+      // Notify AuthContext and redirect to dashboard
+      login();
+      navigate('/dashboard');
     } catch (err) {
-      setError('Invalid email or password');
+      console.error('Login error:', err.response?.data || err.message);
+
+      // Set error message for user feedback
+      if (err.response?.status === 400) {
+        setError('Invalid email or password.');
+      } else if (err.response?.status === 500) {
+        setError('Server error. Please try again later.');
+      } else {
+        setError('Network error. Please check your connection.');
+      }
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -30,24 +54,36 @@ function Login() {
     <div className="form-container">
       <h2>Login</h2>
       <form onSubmit={handleLogin}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Login</button>
+        <div className="form-group">
+          <label htmlFor="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <button type="submit" disabled={loading}>
+          {loading ? 'Logging in...' : 'Login'}
+        </button>
         {error && <p className="error">{error}</p>}
       </form>
-      <p>Don't have an account? <Link to="/register">Register here</Link></p>
+      <p>
+        Don't have an account? <Link to="/register">Register here</Link>
+      </p>
     </div>
   );
 }

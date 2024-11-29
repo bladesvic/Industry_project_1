@@ -8,14 +8,17 @@ const { verifyToken, hasRole } = require('../middleware/authMiddleware'); // Upd
 // Login route
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
+  console.log(`Login attempt for email: ${email}`); // Debug log
   try {
     const user = await User.findOne({ email });
     if (!user) {
+      console.error('User not found for email:', email);
       return res.status(400).json({ error: 'Invalid email or password' });
     }
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
+      console.error('Password mismatch for email:', email);
       return res.status(400).json({ error: 'Invalid email or password' });
     }
 
@@ -30,12 +33,14 @@ router.post('/login', async (req, res) => {
       { expiresIn: '1h' }
     );
 
+    console.log('Login successful for email:', email);
     res.json({ token });
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
+
 
 // Registration route
 router.post('/register', async (req, res) => {
@@ -169,5 +174,22 @@ router.get('/lecturers', verifyToken, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch lecturers' });
   }
 });
+
+// Get current user details
+router.get('/me', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select('email name role');
+    if (!user) {
+      console.error('User not found');
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json(user); // Respond with the user's details
+  } catch (error) {
+    console.error('Error fetching user details:', error);
+    res.status(500).json({ error: 'Failed to fetch user details' });
+  }
+});
+
+
 
 module.exports = router;
