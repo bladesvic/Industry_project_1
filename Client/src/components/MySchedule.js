@@ -48,10 +48,11 @@ function MySchedule() {
   };
 
   return (
-    <div className="calendar-wrapper">
-      <div className={`calendar-container ${selectedEvent ? 'sidebar-open' : ''}`}>
-        <h2>My Schedule</h2>
-        {error && <p className="error">{error}</p>}
+    <div className="my-schedule-container">
+      <h2>My Schedule</h2>
+      {error && <p className="error">{error}</p>}
+
+      <div className="calendar-section">
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
@@ -70,17 +71,32 @@ function MySchedule() {
         />
       </div>
 
-      {/* Right-Side Event Details Sidebar */}
-      {selectedEvent && (
-        <div className="event-details">
-          <h3>{selectedEvent.title}</h3>
-          <p><strong>Start Date:</strong> {selectedEvent.start.toISOString().slice(0, 10)}</p>
-          <p><strong>End Date:</strong> {selectedEvent.end ? selectedEvent.end.toISOString().slice(0, 10) : 'Same Day'}</p>
-          <p><strong>Description:</strong> {selectedEvent.extendedProps.description}</p>
-          <p><strong>Location:</strong> {selectedEvent.extendedProps.location}</p>
-          <button onClick={closeSidebar}>Close</button>
-        </div>
-      )}
+      {/* Course Table */}
+      <div className="course-table-container">
+        <h3>Assigned Courses</h3>
+        <table className="course-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Description</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+              <th>Location</th>
+            </tr>
+          </thead>
+          <tbody>
+            {events.map((event) => (
+              <tr key={event.id}>
+                <td>{event.title}</td>
+                <td>{event.description}</td>
+                <td>{new Date(event.start).toLocaleDateString()}</td>
+                <td>{event.end ? new Date(event.end).toLocaleDateString() : 'Same Day'}</td>
+                <td>{event.location}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

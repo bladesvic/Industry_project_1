@@ -2,12 +2,22 @@ const express = require('express');
 const router = express.Router();
 const Course = require('../models/Course');
 const { verifyToken, hasRole } = require('../middleware/authMiddleware'); // Import from authMiddleware
+const { sendCourseUpdateEmail } = require('../emailService'); 
+
+
 
 // Route to create a course
 router.post('/create', verifyToken, hasRole(['admin']), async (req, res) => {
   const { title, description, startDate, endDate, startTime, endTime, location, assignedUser } = req.body;
 
+  console.log("Received course data:", req.body); // Log incoming request data
+
   try {
+    if (!title || !startDate || !endDate || !startTime || !endTime) {
+      console.error("Missing required fields:", req.body);
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
     const course = new Course({
       title,
       description,
@@ -16,14 +26,15 @@ router.post('/create', verifyToken, hasRole(['admin']), async (req, res) => {
       startTime,
       endTime,
       location,
-      assignedUser: assignedUser || null, // Assign null if no user is provided
+      assignedUser: assignedUser || null,
     });
 
     await course.save();
-    res.status(201).json({ message: 'Course created successfully', course });
+    console.log("Course saved to database:", course); // Log saved course
+    res.status(201).json({ message: "Course created successfully", course });
   } catch (err) {
-    console.error('Error creating course:', err);
-    res.status(500).json({ error: 'Failed to create course' });
+    console.error("Error saving course:", err.errors || err.message); // Log validation/database errors
+    res.status(500).json({ error: "Failed to create course" });
   }
 });
 
@@ -57,6 +68,7 @@ router.put('/update/:id', verifyToken, hasRole(['admin']), async (req, res) => {
   const { assignedUser } = req.body; // User to be assigned
 
   try {
+    // Update the course and fetch the updated document, including the lecturer's details
     const updatedCourse = await Course.findByIdAndUpdate(
       id,
       { assignedUser: assignedUser || null }, // Assign user or unassign if null
@@ -67,8 +79,27 @@ router.put('/update/:id', verifyToken, hasRole(['admin']), async (req, res) => {
       return res.status(404).json({ error: 'Course not found' });
     }
 
+    // If a lecturer is assigned, send a notification email
+    if (updatedCourse.assignedUser) {
+      const { name, email } = updatedCourse.assignedUser;
+      const { courseName } = updatedCourse; // Assuming courseName is a field in the Course model
+
+      try {
+        await sendCourseUpdateEmail(
+          email,
+          name,
+          courseName,
+          `Please check your schedule for updates.`
+        );
+        console.log(`Notification email sent to ${name} (${email})`);
+      } catch (emailErr) {
+        console.error('Error sending email notification:', emailErr);
+        // Optionally, return a warning in the response
+      }
+    }
+
     res.status(200).json({
-      message: 'Course updated successfully',
+      message: 'Course updated successfully and notification sent if applicable',
       course: updatedCourse,
     });
   } catch (err) {

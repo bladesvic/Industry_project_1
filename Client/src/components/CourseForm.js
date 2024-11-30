@@ -71,45 +71,84 @@ function CourseForm({ onCourseCreated }) {
 
   const handleCSVUpload = (event) => {
     const file = event.target.files[0];
-    if (!file) return;
-
+    if (!file) {
+      console.error("No file selected for upload.");
+      return;
+    }
+  
+    console.log("Parsing CSV file:", file.name);
+  
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       complete: async (results) => {
+        console.log("Parsed CSV data:", results.data);
         const parsedData = results.data;
-        const token = localStorage.getItem('token');
-
+        const token = localStorage.getItem("token");
+  
         try {
+          let successCount = 0;
+          let failureCount = 0;
+  
           for (const course of parsedData) {
-            await axios.post(
-              `${process.env.REACT_APP_API_URL}/api/courses/create`,
-              {
-                title: course.title,
-                description: course.description,
-                startDate: course.startDate,
-                endDate: course.endDate,
-                startTime: course.startTime,
-                endTime: course.endTime,
-                location: course.location,
-                assignedUser: course.assignedUser || null,
-              },
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
+            console.log("Processing course:", course);
+  
+            // Validate required fields
+            if (
+              !course.Title ||
+              !course.StartDate ||
+              !course.EndDate ||
+              !course.StartTime ||
+              !course.EndTime
+            ) {
+              console.error("Invalid course data, skipping:", course);
+              failureCount++;
+              continue; // Skip invalid rows
+            }
+  
+            try {
+              const response = await axios.post(
+                `${process.env.REACT_APP_API_URL}/api/courses/create`,
+                {
+                  title: course.Title,
+                  description: course.Description || "",
+                  startDate: course.StartDate,
+                  endDate: course.EndDate,
+                  startTime: course.StartTime,
+                  endTime: course.EndTime,
+                  location: course.Location || "Unknown",
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              console.log("Successfully created course:", response.data);
+              successCount++;
+            } catch (apiError) {
+              console.error("Failed to create course:", course, apiError.response?.data || apiError.message);
+              failureCount++;
+            }
           }
-          setSuccess('Courses imported successfully!');
-          fetchCourses();
+  
+          console.log(`${successCount} courses imported successfully.`);
+          console.log(`${failureCount} courses failed to import.`);
+  
+          setSuccess(`${successCount} courses imported successfully.`);
+          setError(failureCount > 0 ? `${failureCount} courses failed to import.` : "");
+          fetchCourses(); // Refresh course list
         } catch (err) {
-          console.error('Error importing courses:', err);
-          setError('Failed to import courses');
+          console.error("Error importing courses:", err.response?.data || err.message);
+          setError("Failed to import courses.");
         }
       },
       error: (err) => {
-        console.error('CSV parsing error:', err);
-        setError('Error parsing CSV file');
+        console.error("CSV parsing error:", err);
+        setError("Error parsing CSV file.");
       },
     });
   };
+  
+  
+  
+  
 
   const handleAssignUser = async (courseId, userId) => {
     try {
