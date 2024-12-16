@@ -529,11 +529,15 @@ code {
   margin: 20px 0;
   font-size: 16px;
   text-align: left;
+  table-layout: fixed; /* Ensures consistent column widths */
 }
 
 .modern-table th,
 .modern-table td {
   padding: 12px 15px;
+  text-overflow: ellipsis; /* Truncate overflowing text with ellipsis */
+  overflow: hidden;
+  white-space: nowrap; /* Prevent text from wrapping */
 }
 
 .modern-table thead th {
@@ -552,6 +556,36 @@ code {
 
 .modern-table tbody tr:hover {
   background-color: #f1f1f1;
+}
+
+.modern-table td {
+  height: 40px; /* Set consistent row height */
+}
+
+/* Set static column widths */
+.modern-table th:nth-child(1),
+.modern-table td:nth-child(1) {
+  width: 20%; /* Adjust as necessary */
+}
+
+.modern-table th:nth-child(2),
+.modern-table td:nth-child(2) {
+  width: 30%;
+}
+
+.modern-table th:nth-child(3),
+.modern-table td:nth-child(3) {
+  width: 15%;
+}
+
+.modern-table th:nth-child(4),
+.modern-table td:nth-child(4) {
+  width: 15%;
+}
+
+.modern-table th:nth-child(5),
+.modern-table td:nth-child(5) {
+  width: 20%;
 }
 
 /* Buttons */
@@ -582,6 +616,28 @@ code {
 .lecturer-dropdown:focus {
   outline: none;
   border-color: #4caf50;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.pagination button {
+  margin: 0 5px;
+  padding: 5px 10px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 
 
@@ -636,3 +692,107 @@ code {
 }
 
 /* ############################# My Schedule  #######################3 */
+
+/* ############################# Manage Lecturers   #######################3 */
+/* General Container */
+.MS-manage-staff {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.MS-manage-staff h2,
+.MS-manage-staff h3 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.MS-manage-staff .error {
+  color: #d9534f;
+  font-weight: bold;
+}
+
+.MS-manage-staff .success {
+  color: #5cb85c;
+  font-weight: bold;
+}
+
+/* Table Styles */
+.MS-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.MS-table thead {
+  background-color: #f4f4f4;
+}
+
+.MS-table th,
+.MS-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.MS-table th {
+  background-color: #007bff;
+  color: white;
+}
+
+.MS-table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.MS-table tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+/* Input Fields */
+.MS-input {
+  width: 90%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.MS-input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+/* Buttons */
+.MS-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.MS-button:hover {
+  background-color: #0056b3;
+}
+
+.MS-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Assigned Courses Section */
+.MS-assigned-courses {
+  margin-top: 30px;
+}
+
+.MS-assigned-courses h3 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+
+
+
+/* ############################# Manage Lecturers   #######################3 */

@@ -91,5 +91,40 @@ router.post('/available', verifyToken, hasRole(['admin', 'user']), async (req, r
   }
 });
 
+// New Route: Fetch Courses Assigned to a Lecturer
+router.get('/assigned/:lecturerId', verifyToken, hasRole(['admin', 'user']), async (req, res) => {
+  const { lecturerId } = req.params;
+
+  try {
+    // Check if lecturer exists
+    const lecturer = await User.findById(lecturerId);
+    if (!lecturer || lecturer.role !== 'lecturer') {
+      return res.status(404).json({ error: 'Lecturer not found' });
+    }
+
+    // Fetch assigned courses
+    const courses = await Course.find({ assignedUser: lecturerId });
+
+    if (!courses || courses.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    // Return course details
+    const formattedCourses = courses.map((course) => ({
+      _id: course._id,
+      title: course.title,
+      description: course.description,
+      startDate: course.startDate,
+      endDate: course.endDate,
+    }));
+
+    res.status(200).json(formattedCourses);
+  } catch (err) {
+    console.error('Error fetching assigned courses:', err);
+    res.status(500).json({ error: 'Failed to fetch assigned courses' });
+  }
+});
+
+
 // Export router
 module.exports = router;

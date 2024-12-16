@@ -98,8 +98,20 @@ function UserControl() {
       <div className="create-user">
         <h3>Create New User</h3>
         <form onSubmit={handleCreateUser}>
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" required />
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Name"
+            required
+          />
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            required
+          />
           <input
             type="password"
             value={password}
@@ -168,7 +180,10 @@ function UserControl() {
                   <select
                     defaultValue={user.role}
                     onChange={(e) =>
-                      handleUpdateUser(user._id, { role: e.target.value, teachingAbility: user.teachingAbility })
+                      handleUpdateUser(user._id, {
+                        role: e.target.value,
+                        teachingAbility: e.target.value === 'lecturer' ? user.teachingAbility : null,
+                      })
                     }
                   >
                     <option value="user">User</option>
@@ -202,4 +217,3 @@ function UserControl() {
 }
 
 export default UserControl;
-

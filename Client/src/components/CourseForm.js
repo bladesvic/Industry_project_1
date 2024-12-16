@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
-import Papa from 'papaparse'; // Import papaparse
+import Papa from 'papaparse';
 
 function CourseForm({ onCourseCreated }) {
   const [title, setTitle] = useState('');
@@ -15,13 +15,33 @@ function CourseForm({ onCourseCreated }) {
   const [assignedUser, setAssignedUser] = useState('');
   const [users, setUsers] = useState([]);
   const [courses, setCourses] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(''); // Search term state
+  const [filteredCourses, setFilteredCourses] = useState([]); // Filtered courses state
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [currentDate, setCurrentDate] = useState(new Date()); // Selected date for calendar
+  const [calendarApi, setCalendarApi] = useState(null); // Calendar API reference
 
   useEffect(() => {
     fetchCourses();
     fetchUsers();
   }, []);
+
+  useEffect(() => {
+    // Filter courses based on search term
+    const filtered = courses.filter(
+      (course) =>
+        course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (course.description && course.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+    setFilteredCourses(filtered);
+  }, [searchTerm, courses]);
+
+  useEffect(() => {
+    if (calendarApi) {
+      calendarApi.gotoDate(currentDate); // Navigate calendar when the selected date changes
+    }
+  }, [currentDate, calendarApi]);
 
   const fetchCourses = async () => {
     try {
@@ -30,6 +50,7 @@ function CourseForm({ onCourseCreated }) {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCourses(response.data);
+      setFilteredCourses(response.data);
     } catch (err) {
       console.error('Error fetching courses:', err);
     }
@@ -47,116 +68,13 @@ function CourseForm({ onCourseCreated }) {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/courses/create`,
-        { title, description, startDate, endDate, startTime, endTime, location, assignedUser: assignedUser || null },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-
-      setSuccess('Course created successfully!');
-      setError('');
-      fetchCourses();
-      onCourseCreated(response.data.course);
-      resetForm();
-    } catch (err) {
-      console.error('Error creating course:', err);
-      setError(err.response?.data?.error || 'Failed to create course');
-      setSuccess('');
-    }
-  };
-
-  const handleCSVUpload = (event) => {
-    const file = event.target.files[0];
-    if (!file) {
-      console.error("No file selected for upload.");
-      return;
-    }
-  
-    console.log("Parsing CSV file:", file.name);
-  
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: async (results) => {
-        console.log("Parsed CSV data:", results.data);
-        const parsedData = results.data;
-        const token = localStorage.getItem("token");
-  
-        try {
-          let successCount = 0;
-          let failureCount = 0;
-  
-          for (const course of parsedData) {
-            console.log("Processing course:", course);
-  
-            // Validate required fields
-            if (
-              !course.Title ||
-              !course.StartDate ||
-              !course.EndDate ||
-              !course.StartTime ||
-              !course.EndTime
-            ) {
-              console.error("Invalid course data, skipping:", course);
-              failureCount++;
-              continue; // Skip invalid rows
-            }
-  
-            try {
-              const response = await axios.post(
-                `${process.env.REACT_APP_API_URL}/api/courses/create`,
-                {
-                  title: course.Title,
-                  description: course.Description || "",
-                  startDate: course.StartDate,
-                  endDate: course.EndDate,
-                  startTime: course.StartTime,
-                  endTime: course.EndTime,
-                  location: course.Location || "Unknown",
-                },
-                { headers: { Authorization: `Bearer ${token}` } }
-              );
-              console.log("Successfully created course:", response.data);
-              successCount++;
-            } catch (apiError) {
-              console.error("Failed to create course:", course, apiError.response?.data || apiError.message);
-              failureCount++;
-            }
-          }
-  
-          console.log(`${successCount} courses imported successfully.`);
-          console.log(`${failureCount} courses failed to import.`);
-  
-          setSuccess(`${successCount} courses imported successfully.`);
-          setError(failureCount > 0 ? `${failureCount} courses failed to import.` : "");
-          fetchCourses(); // Refresh course list
-        } catch (err) {
-          console.error("Error importing courses:", err.response?.data || err.message);
-          setError("Failed to import courses.");
-        }
-      },
-      error: (err) => {
-        console.error("CSV parsing error:", err);
-        setError("Error parsing CSV file.");
-      },
-    });
-  };
-  
-  
-  
-  
-
   const handleAssignUser = async (courseId, userId) => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.put(
         `${process.env.REACT_APP_API_URL}/api/courses/update/${courseId}`,
         { assignedUser: userId },
-        { headers: { Authorization: `Bearer ${token}` } },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setSuccess(response.data.message);
       fetchCourses();
@@ -180,15 +98,18 @@ function CourseForm({ onCourseCreated }) {
     }
   };
 
-  const resetForm = () => {
-    setTitle('');
-    setDescription('');
-    setStartDate('');
-    setEndDate('');
-    setStartTime('');
-    setEndTime('');
-    setLocation('');
-    setAssignedUser('');
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleMonthChange = (e) => {
+    const newMonth = e.target.value;
+    setCurrentDate((prevDate) => new Date(prevDate.getFullYear(), newMonth, 1));
+  };
+
+  const handleYearChange = (e) => {
+    const newYear = e.target.value;
+    setCurrentDate((prevDate) => new Date(newYear, prevDate.getMonth(), 1));
   };
 
   return (
@@ -199,7 +120,7 @@ function CourseForm({ onCourseCreated }) {
           <h3>Create a New Course</h3>
           {error && <p className="error">{error}</p>}
           {success && <p className="success">{success}</p>}
-          <form onSubmit={handleSubmit}>
+          <form>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Course Title" required />
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" />
             <label>Start Date:</label>
@@ -211,14 +132,40 @@ function CourseForm({ onCourseCreated }) {
             <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Location" />
             <button type="submit">Create Course</button>
           </form>
-          <div className="csv-upload">
-            <label htmlFor="csvUpload">Upload CSV:</label>
-            <input type="file" id="csvUpload" accept=".csv" onChange={handleCSVUpload} />
-          </div>
         </div>
 
         {/* Calendar View */}
         <div className="calendar-section">
+          <div className="calendar-controls">
+            <label htmlFor="month-select">Month:</label>
+            <select
+              id="month-select"
+              value={currentDate.getMonth()}
+              onChange={handleMonthChange}
+            >
+              {Array.from({ length: 12 }, (_, index) => (
+                <option key={index} value={index}>
+                  {new Date(0, index).toLocaleString('default', { month: 'long' })}
+                </option>
+              ))}
+            </select>
+
+            <label htmlFor="year-select">Year:</label>
+            <select
+              id="year-select"
+              value={currentDate.getFullYear()}
+              onChange={handleYearChange}
+            >
+              {Array.from({ length: 10 }, (_, index) => {
+                const year = new Date().getFullYear() - 5 + index;
+                return (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
           <FullCalendar
             plugins={[dayGridPlugin]}
             initialView="dayGridMonth"
@@ -228,6 +175,7 @@ function CourseForm({ onCourseCreated }) {
               end: course.endDate,
             }))}
             height="300px"
+            ref={(calendar) => setCalendarApi(calendar?.getApi())}
           />
         </div>
       </div>
@@ -235,6 +183,13 @@ function CourseForm({ onCourseCreated }) {
       {/* Bottom Row: Existing Courses Table */}
       <div className="table-section">
         <h3>Existing Courses</h3>
+        <input
+          type="text"
+          placeholder="Search by title or description"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          style={{ marginBottom: '10px', padding: '8px', width: '100%' }}
+        />
         <table>
           <thead>
             <tr>
@@ -248,7 +203,7 @@ function CourseForm({ onCourseCreated }) {
             </tr>
           </thead>
           <tbody>
-            {courses.map((course) => (
+            {filteredCourses.map((course) => (
               <tr key={course._id}>
                 <td>{course.title}</td>
                 <td>{course.description}</td>

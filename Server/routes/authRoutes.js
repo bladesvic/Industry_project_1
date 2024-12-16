@@ -3,7 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { verifyToken, hasRole } = require('../middleware/authMiddleware'); // Updated import
+const { verifyToken, hasRole } = require('../middleware/authMiddleware');
 
 // Login route
 router.post('/login', async (req, res) => {
@@ -22,11 +22,6 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Invalid email or password' });
     }
 
-    if (!process.env.JWT_SECRET) {
-      console.error('JWT_SECRET is not defined in environment variables');
-      return res.status(500).json({ error: 'Server configuration error' });
-    }
-
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
@@ -40,7 +35,6 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
-
 
 // Registration route
 router.post('/register', async (req, res) => {
@@ -78,8 +72,8 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Get all users (Admin-only route)
-router.get('/users', verifyToken, hasRole(['admin']), async (req, res) => {
+// Get all users (Admin and User roles only)
+router.get('/users', verifyToken, hasRole(['admin', 'user']), async (req, res) => {
   try {
     const users = await User.find();
     res.json(users);
@@ -128,14 +122,28 @@ router.post('/create', verifyToken, hasRole(['admin']), async (req, res) => {
   }
 });
 
-// Update a user's role (Admin-only route)
-router.put('/update/:id', verifyToken, hasRole(['admin']), async (req, res) => {
-  const { role, teachingAbility } = req.body;
+// Update a user (Admin and User roles only)
+router.put('/update/:id', verifyToken, hasRole(['admin', 'user']), async (req, res) => {
+  const { role, teachingAbility, name, email } = req.body;
 
   try {
-    const updateData = { role };
-    if (role === 'lecturer') {
-      updateData.teachingAbility = teachingAbility || 5;
+    const updateData = {};
+
+    // Update fields as provided
+    if (role && req.user.role === 'admin') {
+      updateData.role = role; // Only admins can update roles
+    }
+
+    if (teachingAbility !== undefined && req.user.role === 'admin') {
+      updateData.teachingAbility = teachingAbility;
+    }
+
+    if (name) {
+      updateData.name = name;
+    }
+
+    if (email) {
+      updateData.email = email;
     }
 
     const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
@@ -165,7 +173,7 @@ router.delete('/delete/:id', verifyToken, hasRole(['admin']), async (req, res) =
 });
 
 // Fetch all lecturers
-router.get('/lecturers', verifyToken, async (req, res) => {
+router.get('/lecturers', verifyToken, hasRole(['admin', 'user']), async (req, res) => {
   try {
     const lecturers = await User.find({ role: 'lecturer' }).select('name email teachingAbility');
     res.json(lecturers);
@@ -180,16 +188,14 @@ router.get('/me', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select('email name role');
     if (!user) {
-      console.error('User not found');
       return res.status(404).json({ error: 'User not found' });
     }
-    res.json(user); // Respond with the user's details
+    res.json(user);
   } catch (error) {
     console.error('Error fetching user details:', error);
     res.status(500).json({ error: 'Failed to fetch user details' });
   }
 });
 
-
-
 module.exports = router;
+

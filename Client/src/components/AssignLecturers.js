@@ -6,9 +6,17 @@ function AssignLecturers() {
   const [lecturers, setLecturers] = useState([]);
   const [feedback, setFeedback] = useState('');
   const [selectedCourseId, setSelectedCourseId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPageUnassigned, setCurrentPageUnassigned] = useState(1);
+  const [currentPageAssigned, setCurrentPageAssigned] = useState(1);
+  const [selectedLecturer, setSelectedLecturer] = useState('');
+  const [filterMode, setFilterMode] = useState('can'); // "can" or "cannot"
+
+  const recordsPerPage = 10;
 
   useEffect(() => {
     fetchCourses();
+    fetchLecturers();
   }, []);
 
   const fetchCourses = async () => {
@@ -23,6 +31,18 @@ function AssignLecturers() {
     }
   };
 
+  const fetchLecturers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/lecturers/all`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setLecturers(response.data);
+    } catch (err) {
+      console.error('Error fetching lecturers:', err);
+    }
+  };
+
   const fetchEligibleLecturers = async (courseId) => {
     try {
       setSelectedCourseId(courseId);
@@ -34,7 +54,7 @@ function AssignLecturers() {
       );
       setLecturers(response.data);
     } catch (err) {
-      console.error('Error fetching lecturers:', err);
+      console.error('Error fetching eligible lecturers:', err);
       setFeedback('Failed to fetch eligible lecturers. Please try again.');
     }
   };
@@ -72,13 +92,60 @@ function AssignLecturers() {
     }
   };
 
-  const assignedCourses = courses.filter((course) => course.assignedUser);
-  const unassignedCourses = courses.filter((course) => !course.assignedUser);
+  const handleSearch = (event) => {
+    setSearchQuery(event.target.value.toLowerCase());
+    setCurrentPageUnassigned(1);
+    setCurrentPageAssigned(1);
+  };
+
+  const toggleFilterMode = () => {
+    setFilterMode((prev) => (prev === 'can' ? 'cannot' : 'can'));
+  };
+
+  const filteredUnassignedCourses = courses
+    .filter((course) => !course.assignedUser)
+    .filter((course) => {
+      const matchesSearch =
+        course.title.toLowerCase().includes(searchQuery) ||
+        course.description.toLowerCase().includes(searchQuery);
+
+      if (!selectedLecturer) return matchesSearch;
+
+      const lecturerEligible = course.eligibleLecturers?.includes(selectedLecturer);
+      return filterMode === 'can'
+        ? lecturerEligible && matchesSearch
+        : !lecturerEligible && matchesSearch;
+    });
+
+  const filteredAssignedCourses = courses
+    .filter((course) => course.assignedUser)
+    .filter((course) => course.title.toLowerCase().includes(searchQuery) || course.description.toLowerCase().includes(searchQuery));
+
+  const unassignedCoursesToDisplay = filteredUnassignedCourses.slice(
+    (currentPageUnassigned - 1) * recordsPerPage,
+    currentPageUnassigned * recordsPerPage
+  );
+
+  const assignedCoursesToDisplay = filteredAssignedCourses.slice(
+    (currentPageAssigned - 1) * recordsPerPage,
+    currentPageAssigned * recordsPerPage
+  );
 
   return (
     <div className="assign-lecturers-container">
       <h2>Assign Lecturers</h2>
       {feedback && <div className="feedback-message">{feedback}</div>}
+
+      <div className="search-container">
+        <input
+          type="text"
+          placeholder="Search courses..."
+          value={searchQuery}
+          onChange={handleSearch}
+          className="search-bar"
+        />
+        
+      </div>
 
       <div className="modern-table-container">
         <h3>Unassigned Courses</h3>
@@ -93,7 +160,7 @@ function AssignLecturers() {
             </tr>
           </thead>
           <tbody>
-            {unassignedCourses.map((course) => (
+            {unassignedCoursesToDisplay.map((course) => (
               <tr key={course._id}>
                 <td>{course.title}</td>
                 <td>{course.description}</td>
@@ -130,6 +197,25 @@ function AssignLecturers() {
             ))}
           </tbody>
         </table>
+        <div className="pagination">
+          <button
+            onClick={() => setCurrentPageUnassigned((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPageUnassigned === 1}
+          >
+            Previous
+          </button>
+          <span>Page {currentPageUnassigned}</span>
+          <button
+            onClick={() =>
+              setCurrentPageUnassigned((prev) =>
+                prev < Math.ceil(filteredUnassignedCourses.length / recordsPerPage) ? prev + 1 : prev
+              )
+            }
+            disabled={currentPageUnassigned >= Math.ceil(filteredUnassignedCourses.length / recordsPerPage)}
+          >
+            Next
+          </button>
+        </div>
 
         <h3>Assigned Courses</h3>
         <table className="modern-table">
@@ -144,7 +230,7 @@ function AssignLecturers() {
             </tr>
           </thead>
           <tbody>
-            {assignedCourses.map((course) => (
+            {assignedCoursesToDisplay.map((course) => (
               <tr key={course._id}>
                 <td>{course.title}</td>
                 <td>{course.description}</td>
@@ -163,10 +249,28 @@ function AssignLecturers() {
             ))}
           </tbody>
         </table>
+        <div className="pagination">
+          <button
+            onClick={() => setCurrentPageAssigned((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPageAssigned === 1}
+          >
+            Previous
+          </button>
+          <span>Page {currentPageAssigned}</span>
+          <button
+            onClick={() =>
+              setCurrentPageAssigned((prev) =>
+                prev < Math.ceil(filteredAssignedCourses.length / recordsPerPage) ? prev + 1 : prev
+              )
+            }
+            disabled={currentPageAssigned >= Math.ceil(filteredAssignedCourses.length / recordsPerPage)}
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
 export default AssignLecturers;
-
