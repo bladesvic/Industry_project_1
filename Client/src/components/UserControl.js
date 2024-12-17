@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import Papa from 'papaparse'; // Import PapaParse for CSV parsing
 
 function UserControl() {
   const [users, setUsers] = useState([]);
@@ -33,12 +34,12 @@ function UserControl() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(
+      await axios.post(
         `${process.env.REACT_APP_API_URL}/api/auth/create`,
         { name, email, password, role, teachingAbility: role === 'lecturer' ? teachingAbility : null },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setSuccess(response.data.message);
+      setSuccess('User created successfully');
       setError('');
       fetchUsers();
       resetForm();
@@ -48,15 +49,66 @@ function UserControl() {
     }
   };
 
+  const handleCSVUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) {
+      setError('No file selected.');
+      return;
+    }
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        const token = localStorage.getItem('token');
+        let successCount = 0;
+        let failureCount = 0;
+
+        for (const user of results.data) {
+          try {
+            if (!user.Name || !user.Email || !user.Password || !user.Role) {
+              failureCount++;
+              continue;
+            }
+
+            await axios.post(
+              `${process.env.REACT_APP_API_URL}/api/auth/create`,
+              {
+                name: user.Name,
+                email: user.Email,
+                password: user.Password,
+                role: user.Role,
+                teachingAbility: user.Role === 'lecturer' ? user.TeachingAbility || 5 : null,
+              },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            successCount++;
+          } catch (err) {
+            console.error('Failed to create user:', user, err);
+            failureCount++;
+          }
+        }
+
+        setSuccess(`${successCount} users created successfully.`);
+        setError(failureCount > 0 ? `${failureCount} users failed to create.` : '');
+        fetchUsers();
+      },
+      error: (err) => {
+        console.error('Error parsing CSV:', err);
+        setError('Error parsing CSV file.');
+      },
+    });
+  };
+
   const handleUpdateUser = async (id, updatedData) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.put(
+      await axios.put(
         `${process.env.REACT_APP_API_URL}/api/auth/update/${id}`,
         updatedData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setSuccess(response.data.message);
+      setSuccess('User updated successfully');
       setError('');
       fetchUsers();
     } catch (err) {
@@ -123,9 +175,7 @@ function UserControl() {
             value={role}
             onChange={(e) => {
               setRole(e.target.value);
-              if (e.target.value !== 'lecturer') {
-                setTeachingAbility(null);
-              }
+              if (e.target.value !== 'lecturer') setTeachingAbility(5);
             }}
           >
             <option value="user">User</option>
@@ -145,6 +195,12 @@ function UserControl() {
           )}
           <button type="submit">Create User</button>
         </form>
+
+        {/* CSV Upload Section */}
+        <div className="csv-upload">
+          <h3>Upload Users via CSV</h3>
+          <input type="file" accept=".csv" onChange={handleCSVUpload} />
+        </div>
       </div>
 
       <div className="user-list">

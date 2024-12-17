@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
+import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import axios from 'axios';
 import ReactTooltip from 'react-tooltip';
 
 function CalendarView() {
   const [events, setEvents] = useState([]);
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [filteredEvents, setFilteredEvents] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const eventsPerPage = 10;
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -18,16 +21,21 @@ function CalendarView() {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const courses = response.data.map((course) => ({
-          id: course._id,
-          title: course.title,
-          start: course.startDate,
-          end: course.endDate,
-          description: course.description,
-          location: course.location,
-          assignedUser: course.assignedUser ? course.assignedUser.name : 'Unassigned',
-        }));
+        // Filter out "Unavailable" courses
+        const courses = response.data
+          .map((course) => ({
+            id: course._id,
+            title: course.title,
+            start: course.startDate,
+            end: course.endDate,
+            description: course.description || 'No description provided',
+            location: course.location || 'Location not specified',
+            assignedUser: course.assignedUser ? course.assignedUser.name : 'Unassigned',
+          }))
+          .filter((course) => !course.title.toLowerCase().startsWith('unavailable'));
+
         setEvents(courses);
+        setFilteredEvents(courses);
       } catch (error) {
         console.error('Error fetching courses:', error);
       }
@@ -36,49 +44,115 @@ function CalendarView() {
     fetchCourses();
   }, []);
 
-  const handleEventClick = (info) => {
-    setSelectedEvent(info.event);
+  // Handle Search Functionality
+  const handleSearch = (e) => {
+    const query = e.target.value.toLowerCase();
+    setSearchQuery(query);
+
+    const filtered = events.filter(
+      (event) =>
+        event.title.toLowerCase().includes(query) ||
+        event.description.toLowerCase().includes(query)
+    );
+
+    setFilteredEvents(filtered);
+    setCurrentPage(1); // Reset to first page
   };
 
-  const closeSidebar = () => {
-    setSelectedEvent(null);
-  };
+  // Paginated Table Data
+  const indexOfLastEvent = currentPage * eventsPerPage;
+  const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
+  const currentEvents = filteredEvents.slice(indexOfFirstEvent, indexOfLastEvent);
+
+  // Handle Page Navigation
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
-    <div className="calendar-wrapper">
-      {/* Calendar Container with conditional class for spacing */}
-      <div className={`calendar-container ${selectedEvent ? 'sidebar-open' : ''}`}>
-        <h2>Lecturer Calendar</h2>
-        <FullCalendar
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="dayGridMonth"
-          events={events}
-          editable={true}
-          selectable={true}
-          height="auto"
-          eventClick={handleEventClick}
-          eventContent={(eventInfo) => (
-            <div data-tip={eventInfo.event.extendedProps.description}>
-              <b>{eventInfo.timeText}</b>
-              <i>{eventInfo.event.title}</i>
-              <ReactTooltip />
-            </div>
-          )}
+    <div className="schedule-container">
+      {/* Calendar Section */}
+      <div className="calendar-header">
+        <h2>Latrobe Course Calendar</h2>
+      </div>
+      <FullCalendar
+        plugins={[dayGridPlugin, listPlugin, interactionPlugin]}
+        initialView="dayGridMonth"
+        events={filteredEvents} // Use the filtered list here
+        height="auto"
+        dayCellContent={(info) => (
+          <div className="custom-day-cell">
+            {info.dayNumberText.replace('日', '')}
+          </div>
+        )}
+        dayMaxEventRows={2}
+        eventContent={(eventInfo) => (
+          <div className="custom-event">
+            <b>{eventInfo.event.title}</b>
+          </div>
+        )}
+        headerToolbar={{
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,listWeek',
+        }}
+      />
+
+      {/* Search Bar */}
+      <div className="table-header">
+        <h3>Course lists</h3>
+        <input
+          type="text"
+          placeholder="Search Courses..."
+          value={searchQuery}
+          onChange={handleSearch}
+          className="search-bar"
         />
       </div>
 
-      {/* Right-Side Event Details Sidebar */}
-      {selectedEvent && (
-        <div className="event-details">
-          <h3>{selectedEvent.title}</h3>
-          <p><strong>Start Date:</strong> {selectedEvent.start.toISOString().slice(0, 10)}</p>
-          <p><strong>End Date:</strong> {selectedEvent.end ? selectedEvent.end.toISOString().slice(0, 10) : 'Same Day'}</p>
-          <p><strong>Description:</strong> {selectedEvent.extendedProps.description}</p>
-          <p><strong>Location:</strong> {selectedEvent.extendedProps.location}</p>
-          <p><strong>Assigned User:</strong> {selectedEvent.extendedProps.assignedUser}</p>
-          <button onClick={closeSidebar}>Close</button>
+      {/* Course Table */}
+      <div className="course-table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Description</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+              <th>Location</th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentEvents.length > 0 ? (
+              currentEvents.map((event) => (
+                <tr key={event.id}>
+                  <td>{event.title}</td>
+                  <td>{event.description}</td>
+                  <td>{new Date(event.start).toLocaleDateString()}</td>
+                  <td>{event.end ? new Date(event.end).toLocaleDateString() : 'N/A'}</td>
+                  <td>{event.location}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5">No courses available</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        {/* Pagination */}
+        <div className="pagination">
+          <button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1}>
+            Previous
+          </button>
+          <span> Page {currentPage} </span>
+          <button
+            onClick={() => paginate(currentPage + 1)}
+            disabled={indexOfLastEvent >= filteredEvents.length}
+          >
+            Next
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -15,20 +15,19 @@ function CourseForm({ onCourseCreated }) {
   const [assignedUser, setAssignedUser] = useState('');
   const [users, setUsers] = useState([]);
   const [courses, setCourses] = useState([]);
-  const [searchTerm, setSearchTerm] = useState(''); // Search term state
-  const [filteredCourses, setFilteredCourses] = useState([]); // Filtered courses state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredCourses, setFilteredCourses] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [currentDate, setCurrentDate] = useState(new Date()); // Selected date for calendar
-  const [calendarApi, setCalendarApi] = useState(null); // Calendar API reference
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [calendarApi, setCalendarApi] = useState(null);
 
   useEffect(() => {
     fetchCourses();
-    fetchUsers();
+    fetchUsers(); // Ensure fetchUsers is defined and included here
   }, []);
-
+  
   useEffect(() => {
-    // Filter courses based on search term
     const filtered = courses.filter(
       (course) =>
         course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -36,13 +35,58 @@ function CourseForm({ onCourseCreated }) {
     );
     setFilteredCourses(filtered);
   }, [searchTerm, courses]);
-
+  
   useEffect(() => {
     if (calendarApi) {
-      calendarApi.gotoDate(currentDate); // Navigate calendar when the selected date changes
+      calendarApi.gotoDate(currentDate);
     }
   }, [currentDate, calendarApi]);
-
+  
+  const deleteCourse = async (id) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${process.env.REACT_APP_API_URL}/api/courses/delete/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSuccess('Course deleted successfully.');
+      fetchCourses(); // Refresh the course list after deletion
+    } catch (err) {
+      console.error('Error deleting course:', err);
+      setError('Failed to delete course. Please try again.');
+    }
+  };
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Prevents page reload
+  
+    try {
+      const token = localStorage.getItem('token');
+  
+      // Make the POST request to create the course
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/courses/create`,
+        {
+          title,
+          description,
+          startDate,
+          endDate,
+          startTime: startTime || '01:00',
+          endTime: endTime || '13:00',
+          location,
+          assignedUser: assignedUser || undefined,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+  
+      setSuccess('Course created successfully!');
+      resetForm(); // Ensure resetForm is defined elsewhere
+      fetchCourses(); // Refresh the course list
+    } catch (err) {
+      console.error('Error creating course:', err);
+      setError('Failed to create course.');
+    }
+  };
+  
   const fetchCourses = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -55,61 +99,89 @@ function CourseForm({ onCourseCreated }) {
       console.error('Error fetching courses:', err);
     }
   };
-
+  
+  const handleCSVUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+  
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        const token = localStorage.getItem("token");
+        let successCount = 0;
+        let failureCount = 0;
+  
+        for (const course of results.data) {
+          try {
+            if (!course.Title || !course.StartDate || !course.EndDate) {
+              failureCount++;
+              continue;
+            }
+  
+            await axios.post(
+              `${process.env.REACT_APP_API_URL}/api/courses/create`,
+              {
+                title: course.Title,
+                description: course.Description || "",
+                startDate: course.StartDate,
+                endDate: course.EndDate,
+                startTime: course.StartTime || '01:00',
+                endTime: course.EndTime || '13:00',
+                location: course.Location || "Unknown",
+              },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            successCount++;
+          } catch (err) {
+            console.error("Failed to import course:", course, err);
+            failureCount++;
+          }
+        }
+  
+        setSuccess(`${successCount} courses imported successfully.`);
+        setError(failureCount > 0 ? `${failureCount} courses failed to import.` : "");
+        fetchCourses(); // Refresh courses
+      },
+      error: (err) => setError("Error parsing CSV file."),
+    });
+  };
+  
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+  
+  const handleMonthChange = (e) => {
+    const newMonth = e.target.value;
+    setCurrentDate(new Date(currentDate.getFullYear(), newMonth, 1));
+  };
+  
+  const handleYearChange = (e) => {
+    const newYear = e.target.value;
+    setCurrentDate(new Date(newYear, currentDate.getMonth(), 1));
+  };
+  
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/lecturers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setUsers(response.data);
+      setUsers(response.data); // Set the list of users in state
     } catch (err) {
       console.error('Error fetching users:', err);
+      setError('Failed to fetch users. Please try again.');
     }
   };
-
-  const handleAssignUser = async (courseId, userId) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.put(
-        `${process.env.REACT_APP_API_URL}/api/courses/update/${courseId}`,
-        { assignedUser: userId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setSuccess(response.data.message);
-      fetchCourses();
-    } catch (err) {
-      console.error('Error assigning user:', err);
-      setError('Failed to assign user');
-    }
-  };
-
-  const handleDeleteCourse = async (courseId) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${process.env.REACT_APP_API_URL}/api/courses/delete/${courseId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setSuccess('Course deleted successfully!');
-      fetchCourses();
-    } catch (err) {
-      console.error('Error deleting course:', err);
-      setError('Failed to delete course');
-    }
-  };
-
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleMonthChange = (e) => {
-    const newMonth = e.target.value;
-    setCurrentDate((prevDate) => new Date(prevDate.getFullYear(), newMonth, 1));
-  };
-
-  const handleYearChange = (e) => {
-    const newYear = e.target.value;
-    setCurrentDate((prevDate) => new Date(newYear, prevDate.getMonth(), 1));
+  const resetForm = () => {
+    setTitle('');
+    setDescription('');
+    setStartDate('');
+    setEndDate('');
+    setStartTime('');
+    setEndTime('');
+    setLocation('');
+    setAssignedUser('');
   };
 
   return (
@@ -120,49 +192,46 @@ function CourseForm({ onCourseCreated }) {
           <h3>Create a New Course</h3>
           {error && <p className="error">{error}</p>}
           {success && <p className="success">{success}</p>}
-          <form>
-            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Course Title" required />
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" />
-            <label>Start Date:</label>
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
-            <label>End Date:</label>
-            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
-            <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} placeholder="Start Time" required />
-            <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} placeholder="End Time" required />
-            <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Location" />
-            <button type="submit">Create Course</button>
-          </form>
+          <form onSubmit={handleSubmit}>
+  <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Course Title" required />
+  <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" />
+  <label>Start Date:</label>
+  <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
+  <label>End Date:</label>
+  <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
+  <label>Start Time:</label>
+  <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} required />
+  <label>End Time:</label>
+  <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} required />
+  <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Location" />
+  
+  {/* Fix the button */}
+  <button type="submit">Create Course</button>
+</form>
+
+          {/* CSV Upload Section */}
+          <div className="csv-upload">
+            <label htmlFor="csvUpload">Upload CSV:</label>
+            <input type="file" id="csvUpload" accept=".csv" onChange={handleCSVUpload} />
+          </div>
         </div>
 
         {/* Calendar View */}
         <div className="calendar-section">
           <div className="calendar-controls">
-            <label htmlFor="month-select">Month:</label>
-            <select
-              id="month-select"
-              value={currentDate.getMonth()}
-              onChange={handleMonthChange}
-            >
+            <label>Month:</label>
+            <select value={currentDate.getMonth()} onChange={handleMonthChange}>
               {Array.from({ length: 12 }, (_, index) => (
                 <option key={index} value={index}>
                   {new Date(0, index).toLocaleString('default', { month: 'long' })}
                 </option>
               ))}
             </select>
-
-            <label htmlFor="year-select">Year:</label>
-            <select
-              id="year-select"
-              value={currentDate.getFullYear()}
-              onChange={handleYearChange}
-            >
+            <label>Year:</label>
+            <select value={currentDate.getFullYear()} onChange={handleYearChange}>
               {Array.from({ length: 10 }, (_, index) => {
                 const year = new Date().getFullYear() - 5 + index;
-                return (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                );
+                return <option key={year} value={year}>{year}</option>;
               })}
             </select>
           </div>
@@ -180,7 +249,7 @@ function CourseForm({ onCourseCreated }) {
         </div>
       </div>
 
-      {/* Bottom Row: Existing Courses Table */}
+      {/* Existing Courses Table */}
       <div className="table-section">
         <h3>Existing Courses</h3>
         <input
@@ -198,8 +267,6 @@ function CourseForm({ onCourseCreated }) {
               <th>Start Date</th>
               <th>End Date</th>
               <th>Location</th>
-              <th>Assigned Lecturer</th>
-              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -210,24 +277,6 @@ function CourseForm({ onCourseCreated }) {
                 <td>{course.startDate}</td>
                 <td>{course.endDate}</td>
                 <td>{course.location}</td>
-                <td>
-                  <select
-                    value={course.assignedUser ? course.assignedUser._id : ''}
-                    onChange={(e) => handleAssignUser(course._id, e.target.value)}
-                  >
-                    <option value="">Unassigned</option>
-                    {users.map((user) => (
-                      <option key={user._id} value={user._id}>
-                        {user.name}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td>
-                  <button className="button-delete" onClick={() => handleDeleteCourse(course._id)}>
-                    Delete
-                  </button>
-                </td>
               </tr>
             ))}
           </tbody>

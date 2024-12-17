@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ManageStaff from '../components/ManageStaff';
-import AssignLecturers from '../components/AssignLecturers'; // Updated import
+import AssignLecturers from '../components/AssignLecturers';
 import UserManagement from '../components/UserManagement';
 import CalendarView from '../components/CalendarView';
 import MySchedule from '../components/MySchedule';
 import CourseForm from '../components/CourseForm';
 import UserControl from '../components/UserControl';
+import Help from '../components/Help'; // Import the Help component
 import apiClient from '../services/apiClient';
+import Control from '../components/Control'; // Import Control component
 import { jwtDecode } from 'jwt-decode';
 
 function Dashboard() {
@@ -21,7 +23,7 @@ function Dashboard() {
   const isTokenValid = (token) => {
     try {
       const decoded = jwtDecode(token);
-      return decoded.exp * 1000 > Date.now(); // Check if token is expired
+      return decoded.exp * 1000 > Date.now();
     } catch (error) {
       console.error('Invalid token:', error);
       return false;
@@ -43,9 +45,18 @@ function Dashboard() {
         const response = await apiClient.get('/api/auth/me', {
           headers: { Authorization: `Bearer ${token}` },
         });
+        const role = response.data.role;
+
         setUserEmail(response.data.email);
-        setUserRole(response.data.role);
+        setUserRole(role);
         setAuthChecked(true);
+
+        // Set default active component based on role
+        if (role === 'user') {
+          setActiveComponent('Manage Staff');
+        } else if (role === 'lecturer') {
+          setActiveComponent('My Schedule');
+        }
       } catch (err) {
         console.error('Error fetching user details:', err.response?.data || err.message);
         localStorage.removeItem('token');
@@ -66,7 +77,7 @@ function Dashboard() {
     switch (activeComponent) {
       case 'Manage Staff':
         return <ManageStaff />;
-      case 'Assign Lecturers': // Updated case
+      case 'Assign Lecturers':
         return <AssignLecturers />;
       case 'User Management':
         return <UserManagement />;
@@ -78,6 +89,10 @@ function Dashboard() {
         return <CourseForm />;
       case 'User Control':
         return <UserControl />;
+      case 'Help': // Help component added
+        return <Help />;
+      case 'Control':
+        return <Control />; // Add this case
       default:
         return <Welcome />;
     }
@@ -104,8 +119,8 @@ function Dashboard() {
           {userRole === 'user' && (
             <>
               <button onClick={() => setActiveComponent('Manage Staff')}>Manage Staff</button>
-              <button onClick={() => setActiveComponent('Assign Lecturers')}>Assign Lecturers</button> {/* Updated button */}
-              <button onClick={() => setActiveComponent('User Management')}>User Management</button>
+              <button onClick={() => setActiveComponent('Assign Lecturers')}>Assign Lecturers</button>
+              <button onClick={() => setActiveComponent('Control')}>Control</button> {/* New Control Page */}
               <button onClick={() => setActiveComponent('Calendar')}>Calendar</button>
               <button onClick={handleLogout}>Logout</button>
             </>
@@ -114,14 +129,18 @@ function Dashboard() {
             <>
               <button onClick={() => setActiveComponent('My Schedule')}>My Schedule</button>
               <button onClick={() => setActiveComponent('Calendar')}>Calendar</button>
+              
+              <button onClick={() => setActiveComponent('User Management')}>User Management</button>
+              <button onClick={() => setActiveComponent('Help')}>Help</button> {/* Help Button */}
               <button onClick={handleLogout}>Logout</button>
             </>
           )}
           {userRole === 'admin' && (
             <>
               <button onClick={() => setActiveComponent('Manage Staff')}>Manage Staff</button>
-              <button onClick={() => setActiveComponent('Assign Lecturers')}>Assign Lecturers</button> {/* Updated button */}
+              <button onClick={() => setActiveComponent('Assign Lecturers')}>Assign Lecturers</button>
               <button onClick={() => setActiveComponent('User Management')}>User Management</button>
+              <button onClick={() => setActiveComponent('Control')}>Control</button> {/* New Control Page */}
               <button onClick={() => setActiveComponent('Calendar')}>Calendar</button>
               <button onClick={() => setActiveComponent('My Schedule')}>My Schedule</button>
               <button onClick={() => setActiveComponent('Create Course')}>Create Course</button>

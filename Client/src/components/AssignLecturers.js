@@ -218,56 +218,58 @@ function AssignLecturers() {
         </div>
 
         <h3>Assigned Courses</h3>
-        <table className="modern-table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Description</th>
-              <th>Start Date</th>
-              <th>End Date</th>
-              <th>Assigned Lecturer</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {assignedCoursesToDisplay.map((course) => (
-              <tr key={course._id}>
-                <td>{course.title}</td>
-                <td>{course.description}</td>
-                <td>{new Date(course.startDate).toLocaleDateString()}</td>
-                <td>{new Date(course.endDate).toLocaleDateString()}</td>
-                <td>{course.assignedUser?.name}</td>
-                <td>
-                  <button
-                    className="remove-button"
-                    onClick={() => handleRemoveLecturer(course._id)}
-                  >
-                    Remove Lecturer
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div className="pagination">
+<table className="modern-table">
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Description</th>
+      <th>Start Date</th>
+      <th>End Date</th>
+      <th>Assigned Lecturer</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {assignedCoursesToDisplay.map((course) => (
+      <tr key={course._id}>
+        <td>{course.title}</td>
+        <td>{course.description}</td>
+        <td>{new Date(course.startDate).toLocaleDateString()}</td>
+        <td>{new Date(course.endDate).toLocaleDateString()}</td>
+        <td>{course.assignedUser?.name || "No Lecturer"}</td>
+        <td> 
           <button
-            onClick={() => setCurrentPageAssigned((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPageAssigned === 1}
+            className="unassign-button"
+            onClick={() => handleRemoveLecturer(course._id)}
           >
-            Previous
+            Unassign
           </button>
-          <span>Page {currentPageAssigned}</span>
-          <button
-            onClick={() =>
-              setCurrentPageAssigned((prev) =>
-                prev < Math.ceil(filteredAssignedCourses.length / recordsPerPage) ? prev + 1 : prev
-              )
-            }
-            disabled={currentPageAssigned >= Math.ceil(filteredAssignedCourses.length / recordsPerPage)}
-          >
-            Next
-          </button>
-        </div>
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+<div className="pagination">
+  <button
+    onClick={() => setCurrentPageAssigned((prev) => Math.max(prev - 1, 1))}
+    disabled={currentPageAssigned === 1}
+  >
+    Previous
+  </button>
+  <span>Page {currentPageAssigned}</span>
+  <button
+    onClick={() =>
+      setCurrentPageAssigned((prev) =>
+        prev < Math.ceil(filteredAssignedCourses.length / recordsPerPage) ? prev + 1 : prev
+      )
+    }
+    disabled={currentPageAssigned >= Math.ceil(filteredAssignedCourses.length / recordsPerPage)}
+  >
+    Next
+  </button>
+</div>
+
+
       </div>
     </div>
   );
